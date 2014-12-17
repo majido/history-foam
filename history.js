@@ -19,9 +19,7 @@
                   min-height: 2em;
                   overflow: hidden;
                   padding-bottom: 1px;
-
                   line-height: 1.75em;
-
                 }
                 .visit-entry {
                   display: flex;
@@ -53,12 +51,17 @@
                 }
 
             */},
+            //TODO: this should be broken down into smaller views 
             function toDetailHTML() {/*
                 <li class='entry'>
                   <div class='entry-box'>
                      $$dateTimeOfDay{mode: 'read-only', className:'time'}
                       <div class='visit-entry'>
-                          <div class='title'><a href=<%= this.data.url %> target='_top' title=%%title > $$url{mode: 'read-only'} </a></div>
+                          <div class='title'>
+                            <a href=<%= this.data.url %> target='_top' title=<%= this.data.title %> >
+                             $$title{mode: 'read-only'} 
+                            </a>
+                          </div>
                           <div class='domain'>$$domain{mode: 'read-only'}</div>
                       </div>
                   </div>
@@ -72,31 +75,86 @@
         name: 'HistoryController',
         properties: [{
             name: 'dao',
+            model_: 'DAOProperty'
+        },
+        {
+            name: 'filteredDAO',
             model_: 'DAOProperty', 
             view: 'DAOListView'
+        },
+        {
+          name: 'groups'
+        },
+        {
+          name: 'query',
+          label: 'Query',
+          view: { factory_: 'TextFieldView', placeholder: 'Search'},
+          // TODO: consider using a listener instead of postSet
+          postSet: function(_, q) {
+            console.log('filter: ' + q);
+            // TODO: we should search all properties not just title, also make it
+            // case insensitive
+            this.filteredDAO = this.dao.where(CONTAINS(History.TITLE ,q)); 
+          }
         }],
+        listeners: [
+          {
+            name: 'onDAOUpdate',
+            isFramed: true,
+            code: function () {
+              this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
+                this.groups = q.groups;
+              }.bind(this));
+            }
+          }
+        ],
         methods: { 
             init: function () {
                 this.SUPER();
                 this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam'});
 
-                //load data from array into dao
-                console.log('load '+ HISTORY_DATA.length+' history entries from file.');
+                // load data from array into dao
+                console.log('loading ' + HISTORY_DATA.length + ' history entries from file.');
                 HISTORY_DATA.select({
                     put: function(item){
                         this.dao.put(History.create(item));
                     }.bind(this)
                 });
+
+                this.filteredDAO = this.dao;
+
+                // update groups
+                this.filteredDAO.listen(this.onDAOUpdate);
+                this.onDAOUpdate();
             }        
         },
         templates: [
+            function CSS() {/*
+              #historyapp {
+                padding-top: 50px;
+              }
+              #header {
+                position:fixed;
+                top:0;
+                height: 50px;
+                width:100%;
+                z-index:3;
+                background-image: -webkit-linear-gradient(white, white 40%, rgba(255, 255, 255, 0.92));
+                border-bottom: 1px solid black;
+              }
+              #search {
+                position: absolute;
+                right: 20px;
+                top: 20px;
+              }
+            */},
             function toDetailHTML() {/*
-            <section id="historyapp">
-                <header id="header"><h1>History</h1></header>
-                <section id="main">
-                    $$dao{tagName: 'ul', mode:'read-only', id: 'history-list'}
-                </section>
-            </section>
+              <section id="historyapp">
+                  <header id="header"><h1>History</h1>$$query{mode:'read-write', id:'search'}</header>
+                  <div id="result">
+                      $$filteredDAO{tagName: 'ul', mode:'read-only', id: 'history-list'}
+                  </div>
+              </section>
             */}
         ]
     });
