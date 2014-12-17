@@ -1,0 +1,7 @@
+{
+	"name": "history-foam",
+	"version": "0.1.0",
+	"dependencies": {
+		"foam": "0.3.1"
+	}
+}
