@@ -3,7 +3,16 @@
 
     CLASS({
         name : 'History',
-        properties : ['domain', 'title', 'url', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay'],
+        properties : ['domain', 'title', 'url', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay',
+        {
+          name: 'favicon',
+          mode: 'read-only',
+          defaultValue:'',
+          getter: function() {
+              // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
+              return CHROME.getFaviconImageSet(this.url);
+          }
+        }],
         templates: [
             function CSS(){/*
                 .entry {
@@ -51,7 +60,8 @@
                 }
 
             */},
-            //TODO: this should be broken down into smaller views 
+            // TODO: this should be broken down into smaller views
+            // TODO: for favicon add style='background-image: <%= this.data.favicon %>' to visit-entry
             function toDetailHTML() {/*
                 <li class='entry'>
                   <div class='entry-box'>
@@ -88,13 +98,13 @@
         {
           name: 'query',
           label: 'Query',
-          view: { factory_: 'TextFieldView', placeholder: 'Search'},
+          view: {factory_: 'TextFieldView', placeholder: 'Search', onKeyMode: true},
           // TODO: consider using a listener instead of postSet
           postSet: function(_, q) {
             console.log('filter: ' + q);
             // TODO: we should search all properties not just title, also make it
             // case insensitive
-            this.filteredDAO = this.dao.where(CONTAINS(History.TITLE ,q)); 
+            this.filteredDAO = this.dao.where(CONTAINS_IC(History.TITLE ,q));
           }
         }],
         listeners: [
@@ -159,3 +169,4 @@
         ]
     });
 })();
+
