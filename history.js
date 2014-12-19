@@ -103,6 +103,7 @@
             display: inline-block;
             height: 15px;
             min-width: 15px;
+            outline:0;
           }
           .actionButton-delete:active {
             background-image: url("delete.png");
