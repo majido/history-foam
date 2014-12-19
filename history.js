@@ -87,9 +87,9 @@
       model_: 'DAOProperty', 
       view: 'HistoryListView'
     },
-    {
-      name: 'groups'
-    },
+    // {
+    //   name: 'groups'
+    // },
     {
       name: 'query',
       label: 'Query',
@@ -106,9 +106,9 @@
         name: 'onDAOUpdate',
         isFramed: true,
         code: function () {
-          this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
-            this.groups = q.groups;
-          }.bind(this));
+          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
+          //   this.groups = q.groups;
+          // }.bind(this));
         }
       }
     ],
@@ -118,19 +118,42 @@
         this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam'});
 
         // load data from array into dao
-        console.log('loading ' + HISTORY_DATA.length + ' history entries from file.');
-        HISTORY_DATA.select({
+        this.getHistoryEntries(function(entries){
+          entries.select({
             put: function(item){
                 this.dao.put(History.create(item));
             }.bind(this)
-        });
+          });
+        }.bind(this));
 
         this.filteredDAO = this.dao;
 
-        // update groups
         this.filteredDAO.listen(this.onDAOUpdate);
         this.onDAOUpdate();
-      }        
+      }, 
+      getHistoryEntries: function(callback) {
+        // Use chrome history API when running as an extension
+        // TODO: It currently loads 1000 entries in memory but it should paginate it instead
+        if (chrome.history) {
+          chrome.history.search({text: '', maxResults: 1000}, function(result) {
+            // Add fields to make it match sample data format
+            for (var i in result) {
+              var entry = result[i];
+              var date = new Date(entry.lastVisitTime);
+              entry["dateRelativeDay"] = date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // TODO: compute relative date e.g., Today - Wednesday, December 17, 2014
+              entry["dateShort"] =  date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // e.g. "Dec 17, 2014"
+              entry["dateTimeOfDay"] = date.toLocaleTimeString('en', {hour:'numeric', minute:'numeric'}); // e.g. "9:31 AM,
+              entry["domain"] = new URL(entry.url).host;
+            }
+
+            console.log('loading ' + result.length + ' history entries from chrome history API.');
+            callback(result);
+          });
+        } else { // Use sample data
+          console.log('loading ' + HISTORY_DATA.length + ' history entries from file.');
+          callback(HISTORY_DATA);
+        }
+      }
     },
     templates: [
       function CSS() {/*
@@ -191,9 +214,7 @@
         if (this.lastTime && this.lastTime - item.time > BROWSING_GAP_TIME) {
             out.push('<li class="gap"></li>');
         }
-
         this.lastTime = item.time;
-
       }
     },
     templates: [
