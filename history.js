@@ -18,8 +18,12 @@
       mode: 'read-only',
       defaultValue:'',
       getter: function() {
-        // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
-        return CHROME.getFaviconImageSet(this.url);
+        // TODO: Find a better way to detect the extension mode and that favicons are available
+        if (chrome.history)
+          // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
+          return CHROME.getFaviconImageSet(this.url);
+        else
+          return '';
       }
     }
     ],
@@ -59,9 +63,12 @@
             display: flex;
             min-width: 0;
             -webkit-padding-start: 16px;
-           }
-          
+            -webkit-margin-start: 20px;
 
+            background-position-y: center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+           }
           .entry .time {
             color: rgb(151, 156, 160);
             min-width: 58px;
@@ -112,13 +119,12 @@
 
       */},
       // TODO: this should be broken down into smaller views
-      // TODO: for favicon add style='background-image: <%= this.data.favicon %>' to visit-entry
       function toDetailHTML() {/*
           <li class='entry'>
             <div class='entry-box'>
-                $$delete
-                $$dateTimeOfDay{mode: 'read-only', className:'time'}
-                <div class='visit-entry'>
+               $$delete
+               $$dateTimeOfDay{mode: 'read-only', className:'time'}
+                <div class='visit-entry' style='background-image: <%= this.data.favicon %>;' >
                     <div class='title'>
                       <a href=<%= this.data.url %> target='_top' title=<%= this.data.title %> >
                        $$title{mode: 'read-only'} 
