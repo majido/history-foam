@@ -4,6 +4,7 @@
   CLASS({
     name : 'History',
     properties : ['ID', 'domain', 'url', 'time', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay',
+    'allTimestamps',
     {
       name:'title',
       getter: function(){
@@ -20,7 +21,28 @@
         // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
         return CHROME.getFaviconImageSet(this.url);
       }
-    }],
+    }
+    ],
+    actions: [
+    {
+      name: 'delete',
+      label: '',  // TODO: How to hide the label?
+      help: 'Delete History Entry',
+      action: function(item) {
+        // UMA: 'HistoryPage_RemoveSelected', HistoryPage_SearchResultRemove,
+        // if (!loadTimeData.getBoolean('allowDeletingHistory'))
+        //   return;
+
+        var toBeRemoved = [];
+        toBeRemoved.push({
+          url: this.url,
+          timestamps: this.allTimestamps
+        });
+        console.log(toBeRemoved);
+        // TODO: chrome.send('removeVisits', toBeRemoved);
+      }
+    }
+    ],
     templates: [
       function CSS(){/*
           .entry-box {
@@ -74,6 +96,17 @@
             overflow: hidden;
             white-space: nowrap;
           }
+          .actionButton-delete {
+            -webkit-padding-end: 15px;
+            background: no-repeat url("delete2.gif");
+            border: none;
+            display: inline-block;
+            height: 15px;
+            min-width: 15px;
+          }
+          .actionButton-delete:active {
+            background-image: url("delete.png");
+          }
 
       */},
       // TODO: this should be broken down into smaller views
@@ -81,7 +114,8 @@
       function toDetailHTML() {/*
           <li class='entry'>
             <div class='entry-box'>
-               $$dateTimeOfDay{mode: 'read-only', className:'time'}
+                $$delete
+                $$dateTimeOfDay{mode: 'read-only', className:'time'}
                 <div class='visit-entry'>
                     <div class='title'>
                       <a href=<%= this.data.url %> target='_top' title=<%= this.data.title %> >
