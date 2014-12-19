@@ -4,7 +4,6 @@
   CLASS({
     name : 'History',
     properties : ['ID', 'domain', 'url', 'time', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay',
-    'allTimestamps',
     {
       name:'title',
       getter: function(){
@@ -33,17 +32,7 @@
       label: '',  // TODO: How to hide the label?
       help: 'Delete History Entry',
       action: function(item) {
-        // UMA: 'HistoryPage_RemoveSelected', HistoryPage_SearchResultRemove,
-        // if (!loadTimeData.getBoolean('allowDeletingHistory'))
-        //   return;
-
-        var toBeRemoved = [];
-        toBeRemoved.push({
-          url: this.url,
-          timestamps: this.allTimestamps
-        });
-        console.log(toBeRemoved);
-        // TODO: chrome.send('removeVisits', toBeRemoved);
+        CHROME.backend.deleteUrl(this.url);
       }
     }
     ],
@@ -179,6 +168,7 @@
       init: function () {
         this.SUPER();
         this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam', seqNo: true});
+        CHROME.backend.history_controller = this;
 
         // load data from array into dao
         this.getHistoryEntries(function(entries){

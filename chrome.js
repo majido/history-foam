@@ -40,5 +40,19 @@ CHROME = {
       s2 += ' ';
     }
     return 'url("' + s2 + '")';
+  },
+  backend: {
+    history_controller: {},
+    // TODO: implement for web-ui case
+    // TODO: we also need deleteUrl(url, timestamps) to replicate the full
+    //  functionality of the current history page.
+    deleteUrl: function(url) {
+      // TODO: UMA: HistoryPage_RemoveSelected', HistoryPage_SearchResultRemove, etc
+      // TODO: if (!loadTimeData.getBoolean('allowDeletingHistory'))
+      // TOD: this doesn't work - fix it
+      //this.history_controller.dao.remove(CONTAINS_IC(History.URL, url), this.history_controller.dao);
+      chrome.history.deleteUrl({url: url});
+      this.history_controller.onDAOUpdate();
+    }
   }
 };
