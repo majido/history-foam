@@ -3,7 +3,15 @@
 
   CLASS({
     name : 'History',
-    properties : ['domain', 'title', 'url', 'time', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay',
+    properties : ['ID', 'domain', 'url', 'time', 'dateTimeOfDay', 'dateShort', 'dateRelativeDay',
+    {
+      name:'title',
+      getter: function(){
+        return this.instance_.title ?
+          this.instance_.title :
+          this.instance_.title = this.url;
+      }
+    },
     {
       name: 'favicon',
       mode: 'read-only',
@@ -30,6 +38,7 @@
             min-width: 0;
             -webkit-padding-start: 16px;
            }
+          
 
           .entry .time {
             color: rgb(151, 156, 160);
@@ -44,6 +53,18 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+          }
+          .entry .title > a {
+            color: rgb(48, 57, 66);
+            margin: 2px;
+            padding: 2px;
+            margin: 4px;
+            padding: 0;
+
+            text-decoration: none;
+          }
+          .entry .title > a:hover {
+            text-decoration: underline;
           }
           .entry .domain {
             -webkit-padding-end: 6px;
@@ -115,13 +136,13 @@
     methods: { 
       init: function () {
         this.SUPER();
-        this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam'});
+        this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam', seqNo: true});
 
         // load data from array into dao
         this.getHistoryEntries(function(entries){
           entries.select({
             put: function(item){
-                this.dao.put(History.create(item));
+              this.dao.put(History.create(item));
             }.bind(this)
           });
         }.bind(this));
@@ -145,7 +166,6 @@
               entry["dateTimeOfDay"] = date.toLocaleTimeString('en', {hour:'numeric', minute:'numeric'}); // e.g. "9:31 AM,
               entry["domain"] = new URL(entry.url).host;
             }
-
             console.log('loading ' + result.length + ' history entries from chrome history API.');
             callback(result);
           });
