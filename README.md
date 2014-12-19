@@ -7,10 +7,10 @@ This mode is most useful for development.
 It is also possible to load this project as an unpacked extension which replaces the default 
 history page (`about://history`).  Here are the steps:
 
-# Navigate to chrome://extensions
-# Check 'Developer mode' in top header
-# Click on "Load unpacked extension..." which should now be visible
-# Select the base of the project
+1. Navigate to chrome://extensions
+2. Check 'Developer mode' in top header
+3. Click on "Load unpacked extension..." which should now be visible
+4. Select the base of the project
 
 
 
