@@ -106,6 +106,7 @@
           }
           .actionButton-delete:active {
             background-image: url("delete.png");
+            outline:0;
           }
 
       */},
