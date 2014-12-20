@@ -61,6 +61,7 @@ CHROME = {
         for (var i in result) {
           var entry = result[i];
           var date = new Date(entry.lastVisitTime);
+          entry["time"] = entry.lastVisitTime;
           entry["dateRelativeDay"] = date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // TODO: compute relative date e.g., Today - Wednesday, December 17, 2014
           entry["dateShort"] =  date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // e.g. "Dec 17, 2014"
           entry["dateTimeOfDay"] = date.toLocaleTimeString('en', {hour:'numeric', minute:'numeric'}); // e.g. "9:31 AM,
