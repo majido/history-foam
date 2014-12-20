@@ -86,7 +86,7 @@
           });
         }.bind(this));
 
-        this.filteredDAO = this.dao;
+        this.filteredDAO = this.dao.orderBy(DESC(History.TIME));
 
         this.filteredDAO.listen(this.onDAOUpdate);
         this.onDAOUpdate();
