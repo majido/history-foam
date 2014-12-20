@@ -192,18 +192,13 @@
           }
           .actionButton-delete {
             -webkit-padding-end: 15px;
-            background: no-repeat url("delete2.gif");
+            background: no-repeat url("assets/delete.png");
             border: none;
             display: inline-block;
             height: 15px;
             min-width: 15px;
             outline:0;
           }
-          .actionButton-delete:active {
-            background-image: url("delete.png");
-            outline:0;
-          }
-
       */},
       // TODO: this should be broken down into smaller views
       function toHTML() {/*
