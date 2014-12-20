@@ -20,19 +20,29 @@
         // TODO: Find a better way to detect the extension mode and that favicons are available
         if (chrome.history)
           // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
-          return CHROME.getFaviconImageSet(this.url);
+          return CHROME.utils.getFaviconImageSet(this.url);
         else
           return '';
       }
     }
-    ],
+    ]
+  });
+
+  CLASS({
+    name: 'HistoryView',
+    extendsModel: 'DetailView',
+    mode: 'read-only',
     actions: [
     {
       name: 'delete',
       label: '',  // TODO: How to hide the label?
       help: 'Delete History Entry',
       action: function(item) {
-        CHROME.backend.deleteUrl(this.url);
+        CHROME.API.deleteHistoryEntry(this.data.url, function(){
+          // Maybe we should reverse this i.e., remove from DAO first an let DAO trigger a removal to backend storage 
+          this.parent.dao.remove(this.data);
+        }.bind(this));
+        
       }
     }
     ],
@@ -108,7 +118,7 @@
 
       */},
       // TODO: this should be broken down into smaller views
-      function toDetailHTML() {/*
+      function toHTML() {/*
           <li class='entry'>
             <div class='entry-box'>
                $$delete
@@ -162,16 +172,24 @@
           //   this.groups = q.groups;
           // }.bind(this));
         }
+      },
+      {
+        name: 'onItemRemoved',
+        isFramed: true,
+        code: function () {
+          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
+          //   this.groups = q.groups;
+          // }.bind(this));
+        }
       }
     ],
     methods: { 
       init: function () {
         this.SUPER();
         this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam', seqNo: true});
-        CHROME.backend.history_controller = this;
 
         // load data from array into dao
-        this.getHistoryEntries(function(entries){
+        CHROME.API.getHistoryEntries(function(entries){
           entries.select({
             put: function(item){
               this.dao.put(History.create(item));
@@ -183,28 +201,6 @@
 
         this.filteredDAO.listen(this.onDAOUpdate);
         this.onDAOUpdate();
-      }, 
-      getHistoryEntries: function(callback) {
-        // Use chrome history API when running as an extension
-        // TODO: It currently loads 1000 entries in memory but it should paginate it instead
-        if (chrome.history) {
-          chrome.history.search({text: '', maxResults: 1000}, function(result) {
-            // Add fields to make it match sample data format
-            for (var i in result) {
-              var entry = result[i];
-              var date = new Date(entry.lastVisitTime);
-              entry["dateRelativeDay"] = date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // TODO: compute relative date e.g., Today - Wednesday, December 17, 2014
-              entry["dateShort"] =  date.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' }); // e.g. "Dec 17, 2014"
-              entry["dateTimeOfDay"] = date.toLocaleTimeString('en', {hour:'numeric', minute:'numeric'}); // e.g. "9:31 AM,
-              entry["domain"] = new URL(entry.url).host;
-            }
-            console.log('loading ' + result.length + ' history entries from chrome history API.');
-            callback(result);
-          });
-        } else { // Use sample data
-          console.log('loading ' + HISTORY_DATA.length + ' history entries from file.');
-          callback(HISTORY_DATA);
-        }
       }
     },
     templates: [
@@ -241,7 +237,14 @@
   CLASS({
     name: 'HistoryListView',
     extendsModel: 'DAOListView',
-    properties:['lastDate', 'lastTime'],
+    properties:[
+      'lastDate',
+      'lastTime',
+      {
+        name:'rowView',
+        defaultValue: 'HistoryView'
+      }
+    ],
     methods: {
       // Add section heads and gaps
       beforeRowToHTML: function(item, out){
