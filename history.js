@@ -17,8 +17,7 @@
       mode: 'read-only',
       defaultValue:'',
       getter: function() {
-        // TODO: Find a better way to detect the extension mode and that favicons are available
-        if (chrome.history)
+        if (CHROME.isExtension)
           // TODO: For mobile use: getFaviconImageSet(this.url, 32, 'touch-icon')
           return CHROME.utils.getFaviconImageSet(this.url);
         else
@@ -27,6 +26,104 @@
     }
     ]
   });
+
+  CLASS({
+    name: 'HistoryController',
+    properties: [{
+      name: 'dao',
+      model_: 'DAOProperty'
+    },
+    {
+      name: 'filteredDAO',
+      model_: 'DAOProperty', 
+      view: 'HistoryListView'
+    },
+    // {
+    //   name: 'groups'
+    // },
+    {
+      name: 'query',
+      label: 'Query',
+      view: {factory_: 'TextFieldView', placeholder: 'Search', onKeyMode: true},
+      // TODO: consider using a listener instead of postSet
+      postSet: function(_, q) {
+        console.log('filter: ' + q);
+        // TODO: we should search all properties not just title
+        this.filteredDAO = this.dao.where(CONTAINS_IC(History.TITLE ,q));
+      }
+    }],
+    listeners: [
+      {
+        name: 'onDAOUpdate',
+        isFramed: true,
+        code: function () {
+          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
+          //   this.groups = q.groups;
+          // }.bind(this));
+        }
+      },
+      {
+        name: 'onItemRemoved',
+        isFramed: true,
+        code: function () {
+          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
+          //   this.groups = q.groups;
+          // }.bind(this));
+        }
+      }
+    ],
+    methods: { 
+      init: function () {
+        this.SUPER();
+        this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam', seqNo: true});
+
+        // load data from array into dao
+        CHROME.API.getHistoryEntries(function(entries){
+          entries.select({
+            put: function(item){
+              this.dao.put(History.create(item));
+            }.bind(this)
+          });
+        }.bind(this));
+
+        this.filteredDAO = this.dao;
+
+        this.filteredDAO.listen(this.onDAOUpdate);
+        this.onDAOUpdate();
+      }
+    },
+    templates: [
+      function CSS() {/*
+        #historyapp {
+          padding-top: 50px;
+        }
+        #header {
+          position:fixed;
+          top:0;
+          height: 50px;
+          width:100%;
+          z-index:3;
+          background-image: -webkit-linear-gradient(white, white 40%, rgba(255, 255, 255, 0.92));
+          border-bottom: 1px solid black;
+        }
+        #search {
+          position: absolute;
+          right: 20px;
+          top: 20px;
+        }
+      */},
+      function toDetailHTML() {/*
+        <section id="historyapp">
+            <header id="header"><h1>History</h1>$$query{mode:'read-write', id:'search'}</header>
+            <div id="result">
+                $$filteredDAO{tagName: 'ul', mode:'read-only', id: 'history-list'}
+            </div>
+        </section>
+      */}
+    ]
+  });
+
+
 
   CLASS({
     name: 'HistoryView',
@@ -133,103 +230,6 @@
                 </div>
             </div>
           </li>
-      */}
-    ]
-  });
-
-
-  CLASS({
-    name: 'HistoryController',
-    properties: [{
-      name: 'dao',
-      model_: 'DAOProperty'
-    },
-    {
-      name: 'filteredDAO',
-      model_: 'DAOProperty', 
-      view: 'HistoryListView'
-    },
-    // {
-    //   name: 'groups'
-    // },
-    {
-      name: 'query',
-      label: 'Query',
-      view: {factory_: 'TextFieldView', placeholder: 'Search', onKeyMode: true},
-      // TODO: consider using a listener instead of postSet
-      postSet: function(_, q) {
-        console.log('filter: ' + q);
-        // TODO: we should search all properties not just title
-        this.filteredDAO = this.dao.where(CONTAINS_IC(History.TITLE ,q));
-      }
-    }],
-    listeners: [
-      {
-        name: 'onDAOUpdate',
-        isFramed: true,
-        code: function () {
-          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
-          //   this.groups = q.groups;
-          // }.bind(this));
-        }
-      },
-      {
-        name: 'onItemRemoved',
-        isFramed: true,
-        code: function () {
-          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
-          //   this.groups = q.groups;
-          // }.bind(this));
-        }
-      }
-    ],
-    methods: { 
-      init: function () {
-        this.SUPER();
-        this.dao = EasyDAO.create({model: History, daoType: 'MDAO', name: 'history-foam', seqNo: true});
-
-        // load data from array into dao
-        CHROME.API.getHistoryEntries(function(entries){
-          entries.select({
-            put: function(item){
-              this.dao.put(History.create(item));
-            }.bind(this)
-          });
-        }.bind(this));
-
-        this.filteredDAO = this.dao;
-
-        this.filteredDAO.listen(this.onDAOUpdate);
-        this.onDAOUpdate();
-      }
-    },
-    templates: [
-      function CSS() {/*
-        #historyapp {
-          padding-top: 50px;
-        }
-        #header {
-          position:fixed;
-          top:0;
-          height: 50px;
-          width:100%;
-          z-index:3;
-          background-image: -webkit-linear-gradient(white, white 40%, rgba(255, 255, 255, 0.92));
-          border-bottom: 1px solid black;
-        }
-        #search {
-          position: absolute;
-          right: 20px;
-          top: 20px;
-        }
-      */},
-      function toDetailHTML() {/*
-        <section id="historyapp">
-            <header id="header"><h1>History</h1>$$query{mode:'read-write', id:'search'}</header>
-            <div id="result">
-                $$filteredDAO{tagName: 'ul', mode:'read-only', id: 'history-list'}
-            </div>
-        </section>
       */}
     ]
   });
