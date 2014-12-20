@@ -38,9 +38,6 @@
       model_: 'DAOProperty', 
       view: 'HistoryListView'
     },
-    // {
-    //   name: 'groups'
-    // },
     {
       name: 'query',
       label: 'Query',
@@ -57,18 +54,12 @@
         name: 'onDAOUpdate',
         isFramed: true,
         code: function () {
-          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
-          //   this.groups = q.groups;
-          // }.bind(this));
         }
       },
       {
         name: 'onItemRemoved',
         isFramed: true,
         code: function () {
-          // this.dao.select(GROUP_BY(History.DATE_RELATIVE_DAY))(function (q) {
-          //   this.groups = q.groups;
-          // }.bind(this));
         }
       }
     ],
