@@ -85,10 +85,14 @@
     },
     templates: [
       function CSS() {/*
+        body {
+          font-family: 'Lucida Grande', sans-serif;
+          font-size: 75%;
+        }
         #historyapp {
           padding-top: 50px;
         }
-        #header {
+        header {
           position:fixed;
           top:0;
           height: 50px;
@@ -96,16 +100,49 @@
           z-index:3;
           background-image: -webkit-linear-gradient(white, white 40%, rgba(255, 255, 255, 0.92));
           border-bottom: 1px solid black;
+          
+          display: flex;
         }
         #search {
-          position: absolute;
-          right: 20px;
-          top: 20px;
+          margin-right: 20px;
+          margin-left: auto;
+          align-self: center;
+          font-size: 16px;
+        }
+
+        @media only screen and (max-device-width : 480px) {
+          body {
+            font-family: Arial, sans-serif;
+            font-size: 100%;
+          }
+          #historyapp {
+            padding-top: 0;
+          }
+          header {
+            position: static;
+            flex: auto;
+            flex-flow: column;
+            padding-bottom: 5px;
+            height: auto;
+          }
+          h1 {
+            -webkit-margin-before: 0.2em;
+            -webkit-margin-after: 0.2em;
+          }
+          #search {
+            margin-right: auto;
+            margin-left: 0;
+            width: 100%;
+            font-size: 20px;            
+          }
         }
       */},
       function toDetailHTML() {/*
         <section id="historyapp">
-            <header id="header"><h1>History</h1>$$query{mode:'read-write', id:'search'}</header>
+            <header>
+              <h1>History</h1>
+              $$query{mode:'read-write', id:'search'}
+            </header>
             <div id="result">
                 $$filteredDAO{tagName: 'ul', mode:'read-only', id: 'history-list'}
             </div>
@@ -151,7 +188,6 @@
             min-width: 0;
             -webkit-padding-start: 16px;
             -webkit-margin-start: 20px;
-
             background-position-y: center;
             background-repeat: no-repeat;
             background-size: 16px;
@@ -202,6 +238,24 @@
           .actionButton-delete:active {
             background-image: url("assets/delete2.gif");
             outline:0;
+          }
+
+
+          @media only screen and (max-device-width : 480px) {
+            .entry-box {
+              border-bottom: 1px solid rgb(220, 220, 220);
+              border-top: 1px solid rgb(220, 220, 220);
+              margin-bottom:0;
+            }
+            .visit-entry {
+              flex: auto;
+              flex-flow: column;
+              line-height: 1.3;
+              -webkit-margin-start: 0;
+            }
+            .time {
+              display: none;
+            }
           }
       */},
       // TODO: this should be broken down into smaller views
@@ -278,6 +332,17 @@
           height: 14px;
           margin: 1px 0;
           width: 45px;
+        }
+        @media only screen and (max-device-width : 480px) {
+          h3 {
+            font-size: 14px;
+          }
+          .gap {
+            display: none;
+          }
+          ul{
+            padding: 0;
+          }
         }
       */}
     ]
