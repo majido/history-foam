@@ -236,6 +236,10 @@
       }
     ],
     methods: {
+      updateHTML: function() {
+        this.lastDate = null;
+        this.SUPER();
+      },
       // Add section heads and gaps
       beforeRowToHTML: function(item, out){
         var date = item.dateRelativeDay,
