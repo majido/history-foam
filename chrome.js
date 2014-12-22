@@ -56,7 +56,7 @@ CHROME = {
     getHistoryEntries: function(callback) {
       // Use chrome history API when running as an extension
       // TODO: It currently loads 1000 entries in memory but it should paginate it instead
-      chrome.history.search({text: '', maxResults: 1000}, function(result) {
+      chrome.history.search({text: '', startTime: 0, maxResults: 200}, function(result) {
         // Add fields to make it match sample data format
         for (var i in result) {
           var entry = result[i];
@@ -74,9 +74,6 @@ CHROME = {
     deleteHistoryEntry: function(url, callback){    
       // TODO: we also need deleteUrl(url, timestamps) to replicate the full
       //  functionality of the current history page.
-      // TODO: UMA: HistoryPage_RemoveSelected', HistoryPage_SearchResultRemove, etc
-      // TODO: if (!loadTimeData.getBoolean('allowDeletingHistory'))
-      // TOD: this doesn't work - fix it
       chrome.history.deleteUrl({url: url});
       callback();
     }
