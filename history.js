@@ -199,6 +199,10 @@
             min-width: 15px;
             outline:0;
           }
+          .actionButton-delete:active {
+            background-image: url("assets/delete2.gif");
+            outline:0;
+          }
       */},
       // TODO: this should be broken down into smaller views
       function toHTML() {/*
