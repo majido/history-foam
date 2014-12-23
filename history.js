@@ -28,8 +28,70 @@
   });
 
   CLASS({
+    name: 'UndoView',
+    extendsModel: 'View',
+    properties: [
+      { name: 'data' },
+      { name: 'action' },
+    ],
+    templates: [
+      function CSS(){/*
+        .toast {
+          position:fixed;
+          bottom: 0;
+          background-color: #404040;
+          border-radius: 3px;
+          box-shadow: 0 0 2px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.24);
+          color: #fff;
+          line-height: 20px;
+          padding: 16px;
+          transition: opacity 200ms,-webkit-transform 300ms cubic-bezier(0.165,0.840,0.440,1.000);
+          white-space: nowrap;
+          z-index: 100;
+          -webkit-transform: translateY(-10px);
+          transform: translateY(-10px);
+          font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+          font-size: 115%;
+        }
+        .undo {
+          display: inline;
+          padding-left: 16px;
+          color: #a1c2fa;
+          cursor: pointer;
+          font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+        .hidden {
+          display: none;
+        }
+      */},
+      function toHTML() {/*
+          <div class="toast" id="<%= this.setClass('hidden', function() {return !self.action.isAvailable.call(self.data, self.action);}) %>">
+            <span>History entry deleted</span>
+            <div class="undo" id="<%= this.on('click', this.action.action.bind(this.data), this.id) %>">Undo</div>
+          </div>
+      */}
+    ]
+  });
+
+  CLASS({
     name: 'HistoryController',
-    properties: [{
+    imports: [ 'setTimeout', 'clearTimeout' ],
+    properties: [
+    {
+      name: 'timeoutRef',
+      defaultValue: -1
+    },
+    {
+      name:'show_undo_toast',
+      defaultValue: false
+    },
+    {
+      name: 'pending_for_delete_item',
+      defaultValue: null
+    },
+    {
       name: 'dao',
       model_: 'DAOProperty'
     },
@@ -48,20 +110,35 @@
         // TODO: we should search all properties not just title
         this.filteredDAO = this.dao.where(CONTAINS_IC(History.TITLE ,q));
       }
-    }],
+    }
+    ],
     listeners: [
       {
         name: 'onDAOUpdate',
         isFramed: true,
         code: function () {
         }
-      },
-      {
-        name: 'onItemRemoved',
-        isFramed: true,
-        code: function () {
-        }
       }
+    ],
+    actions: [
+    {
+      // TODO: This shows up in the "actionToolbar" as a button with no label.
+      // Need to suppress that.
+      name: 'undoDelete',
+      label: '',
+      isAvailable: function() {
+        // TODO: Looks like a FOAM bug - if the below is removed, siAvailable isn't
+        //  re-evaluated when show_undo_toast changes.
+        this.show_undo_toast;  // DO NOT REMOVE
+        return ((this.pending_for_delete_item != null) && this.show_undo_toast);
+      },
+      action: function() {
+        if (this.pending_for_delete_item) {
+          this.dao.put(this.pending_for_delete_item);
+        }
+        this.pending_for_delete_item = null;
+      }
+    }
     ],
     methods: { 
       init: function () {
@@ -81,7 +158,27 @@
 
         this.filteredDAO.listen(this.onDAOUpdate);
         this.onDAOUpdate();
-      }
+      },
+      undoTimeout: function() {
+        CHROME.API.deleteHistoryEntry(this.pending_for_delete_item.url);
+        this.show_undo_toast = false;
+        pending_for_delete_item = null;
+      },
+      deleteItem: function(item) {
+        if (this.pending_for_delete_item) {
+          CHROME.API.deleteHistoryEntry(this.pending_for_delete_item.url);
+        }
+        this.pending_for_delete_item = item;
+        // Remove the item from DAO right away, but don't call CHROME.API.deleteHistoryEntry
+        // until the undo timeout expires
+        this.dao.remove(item);
+        this.show_undo_toast = true;
+        if (this.timeoutRef != -1) {
+          this.clearTimeout(this.timeoutRef);
+          this.timeoutRef = null;
+        }
+        this.timeoutRef = this.setTimeout(this.undoTimeout.bind(this), 4000);
+      },
     },
     templates: [
       function CSS() {/*
@@ -143,6 +240,7 @@
               <h1>History</h1>
               $$query{mode:'read-write', id:'search'}
             </header>
+            $$undoDelete{ model_: 'UndoView' }
             <div id="result">
                 $$filteredDAO{tagName: 'ul', mode:'read-only', id: 'history-list'}
             </div>
@@ -150,8 +248,6 @@
       */}
     ]
   });
-
-
 
   CLASS({
     name: 'HistoryView',
@@ -163,11 +259,7 @@
       label: '',  // TODO: How to hide the label?
       help: 'Delete History Entry',
       action: function(item) {
-        CHROME.API.deleteHistoryEntry(this.data.url, function(){
-          // Maybe we should reverse this i.e., remove from DAO first an let DAO trigger a removal to backend storage 
-          this.parent.dao.remove(this.data);
-        }.bind(this));
-        
+          this.parent.parent.data.deleteItem(this.data);
       }
     }
     ],

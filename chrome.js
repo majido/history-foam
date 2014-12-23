@@ -71,11 +71,11 @@ CHROME = {
         callback(result);
       });
     },
-    deleteHistoryEntry: function(url, callback){    
+    deleteHistoryEntry: function(url, opt_callback) {
       // TODO: we also need deleteUrl(url, timestamps) to replicate the full
       //  functionality of the current history page.
       chrome.history.deleteUrl({url: url});
-      callback();
+      opt_callback && opt_callback();
     }
   }
 };
