@@ -130,7 +130,7 @@
         // TODO: Looks like a FOAM bug - if the below is removed, siAvailable isn't
         //  re-evaluated when show_undo_toast changes.
         this.show_undo_toast;  // DO NOT REMOVE
-        return ((this.pending_for_delete_item != null) && this.show_undo_toast);
+        return (this.pending_for_delete_item != null) && this.show_undo_toast;
       },
       action: function() {
         if (this.pending_for_delete_item) {
